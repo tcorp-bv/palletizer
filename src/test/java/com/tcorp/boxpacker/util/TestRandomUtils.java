@@ -26,4 +26,5 @@ public class TestRandomUtils {
         Map<Integer, Long> counts = permuted.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
         assertEquals(counts.size(), n);
     }
+
 }

@@ -28,13 +28,13 @@ public class ExampleRender {
 //            Box box = new Box(new Vector3D(), new Vector3D(100 +500 * Math.random(), 200 + 300 * Math.random(), 200 + 300 * Math.random()), 0);
 //            boxes.add(box);
 //        }
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 24; i++) {
             Box box = new Box(new Vector3D(), new Vector3D(540, 420, 240), 0);
             boxes.add(box);
         }
         BoxPacker boxPacker = new BoxPacker();
-        PackingSolution solution = boxPacker.pack(boxes, containers, new PackerConfig().setIterations(100).setPopulationSize(2000).setBestFitCutoff(400).setMutationProbability(0.5).setMutationPercentage(0.05)
-                .setCrossoverProbability(0.5).setMutateGeneProbability(0.5).setMutateGenesPercentage(0.05));
+        PackingSolution solution = boxPacker.pack(boxes, containers, new PackerConfig().setIterations(200).setPopulationSize(5000).setBestFitCutoff(1000).setMutationProbability(0.5)
+                .setMutationPercentage(0.1).setCrossoverProbability(0.5).setMutateGeneProbability(0.5).setMutateGenesPercentage(0.5));
 //        PackingSolution solution2 = boxPacker.pack(boxes, containers, new PackerConfig().setIterations(100).setPopulationSize(3000).setBestFitCutoff(100).setMutationProbability(0.5).setMutationPercentage(0.05)
 //                .setCrossoverProbability(0.5).setMutateGeneProbability(0.5).setMutateGenesPercentage(0.3));
         System.out.println("solution 1: ");

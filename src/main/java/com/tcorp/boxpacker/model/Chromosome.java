@@ -2,6 +2,8 @@ package com.tcorp.boxpacker.model;
 
 import com.tcorp.boxpacker.util.ArrayUtils;
 import com.tcorp.boxpacker.util.RandomUtils;
+import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.random.RandomGeneratorFactory;
 
 import java.util.*;
 
@@ -71,7 +73,9 @@ public class Chromosome {
     public Chromosome mutate(double mutationPercentage) {
         //todo: regenerate two genes
         Chromosome c = this;
-        for (int i = 0; i < max(1l, Math.round(getBoxSequence().length * mutationPercentage)); i++)
+        long numgen = c.getOrGenerateGene("MUTNUM");
+        double actualMutationPercentage = RandomUtils.getRandomWithMean(RandomGeneratorFactory.createRandomGenerator(new Random(numgen)), mutationPercentage);
+        for (int i = 0; i < max(1l, Math.round(getBoxSequence().length * actualMutationPercentage)); i++)
             c = new Chromosome(swapRandom(c.getBoxSequence()), swapRandom(c.getContainerSequence()), genes, genesList);
         c.setGenesAndList((HashMap<Object, Long>) genes.clone(), new ArrayList<>(genesList));
         return c;
@@ -83,7 +87,11 @@ public class Chromosome {
             return this;
         HashMap<Object, Long> genesClone = (HashMap<Object, Long>) genes.clone();
         Chromosome c = this;
-        for (int i = 0; i < max(1l, Math.round(genes.size() * genePercentage)); i++)
+
+        long numgen = c.getOrGenerateGene("MUTGENENUMGEN");
+        double actualGenePercentage = RandomUtils.getRandomWithMean(RandomGeneratorFactory.createRandomGenerator(new Random(numgen)), genePercentage);
+
+        for (int i = 0; i < max(1l, Math.round(genes.size() * actualGenePercentage)); i++)
             genesClone.put(genesList.get(i), r.nextLong());
         return new Chromosome(getBoxSequence(), getContainerSequence(), genesClone, new ArrayList<>(genesList));
     }
@@ -91,11 +99,17 @@ public class Chromosome {
     public Chromosome crossoverWith(Chromosome parent, double crossoverPercentage) {
 
         Chromosome c = this;
-        for (int i = 0; i < max(1l, Math.round(getBoxSequence().length * crossoverPercentage)); i++)
+
+        long numgen = c.getOrGenerateGene("CROSNUMGEN");
+        RandomGenerator rng = RandomGeneratorFactory.createRandomGenerator(new Random(numgen));
+        double actualBoxGenePercentage = RandomUtils.getRandomWithMean(rng, crossoverPercentage);
+        double actualContGenePercentage = RandomUtils.getRandomWithMean(rng, crossoverPercentage);
+
+        for (int i = 0; i < max(1l, Math.round(getBoxSequence().length * actualBoxGenePercentage)); i++)
             c = new Chromosome(crossOverRandom(getBoxSequence(), parent.getBoxSequence()),
                     getContainerSequence(),
                     genes, genesList);
-        for (int i = 0; i < max(1l, Math.round(getContainerSequence().length * crossoverPercentage)); i++)
+        for (int i = 0; i < max(1l, Math.round(getContainerSequence().length * actualContGenePercentage)); i++)
             c = new Chromosome(getBoxSequence(),
                     crossOverRandom(getContainerSequence(), parent.getContainerSequence()),
                     genes, genesList);

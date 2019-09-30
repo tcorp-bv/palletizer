@@ -1,5 +1,8 @@
 package com.tcorp.boxpacker.util;
 
+import org.apache.commons.math3.distribution.BetaDistribution;
+import org.apache.commons.math3.random.RandomGenerator;
+
 import java.util.*;
 
 public class RandomUtils {
@@ -49,10 +52,10 @@ public class RandomUtils {
         }
        return result;
     }
-    public double getValue(double average){
-        BetaDistribution betaDistribution;
-
-        double next = r.nextGaussian() + average;
-        return next > 1 ?
+    public static double getRandomWithMean(RandomGenerator r, double average){
+        double beta = 1;
+        double alpha = beta * average / (1 - average);
+        BetaDistribution betaDistribution = new BetaDistribution(r, alpha, beta);
+        return betaDistribution.sample();
     }
 }
