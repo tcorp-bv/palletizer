@@ -1,0 +1,150 @@
+<html>
+    <head>
+        <title>Pallet viewer</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    </head>
+    <body style="margin:0">
+        <div id="container"></div>
+        		<script type="module">
+        		    var cubes = $cubes;
+        			import * as THREE from "https://cdn.jsdelivr.net/npm/three@v0.108.0/build/three.module.js";
+
+        			import { TrackballControls } from 'https://cdn.jsdelivr.net/npm/three@0.108.0/examples/jsm/controls/TrackballControls.js';
+        			import { BufferGeometryUtils } from 'https://cdn.jsdelivr.net/npm/three@0.108.0/examples/jsm/utils/BufferGeometryUtils.js';
+        			var camera, controls, scene, renderer;
+                    			init();
+                    			animate();
+                    			function init() {
+				                    var textureLoader = new THREE.TextureLoader();
+
+                    		        var width = 6000;
+                    		        var height = width/window.innerWidth*window.innerHeight;
+                    				camera = new THREE.PerspectiveCamera( 45, width / height , 1, 8000 );
+                    				camera.position.set(1200/2, 1000, 800/2);
+                    				// world
+                    				scene = new THREE.Scene();
+                    				scene.background = new THREE.Color( 0xF9F9F6 );
+
+                    				var origin = new THREE.Object3D(0,0,0);
+                                    scene.add(origin);
+
+
+                    				var material = new THREE.MeshPhongMaterial( { color: 0xffffff, flatShading: true } );
+				                    var palletTexture = textureLoader.load( "./pallet.jpg" );
+                                    palletTexture.wrapS = palletTexture.wrapT = THREE.MirroredRepeatWrapping;
+                                    palletTexture.offset.set(0.5, 0.5);
+                                    var palletMaterial = new THREE.MeshPhongMaterial( { color: 0xffffff, map: palletTexture, bumpMap: palletTexture } );
+
+
+                                    var pallet = new THREE.Mesh( new THREE.BoxGeometry(1200,  144, 800), palletMaterial);
+                                    pallet.position.set(1200/2 , 144/2-144, 800/2);
+                                    pallet.updateMatrix();
+                                    pallet.matrixAutoUpdate = false;
+                                    scene.add( pallet );
+
+                                    var geometryCube = getBox(1200, 1800 -144, 800 );
+                                    var lineSegments = new THREE.LineSegments( geometryCube, new THREE.LineDashedMaterial( { color: "gray", dashSize: 100, gapSize: 200 } ) );
+                                    lineSegments.computeLineDistances();
+                    				lineSegments.position.set(1200/2, (1800-144)/2, 800/2);
+                                    scene.add(lineSegments);
+                                    //var geometrySpline = new THREE.BufferGeometry().setFromPoints( samples );
+                    			   // var space_wireframe = new THREE.Line(new THREE.WireframeGeometry(new THREE.BoxGeometry(1200,  1800-144, 800 )), new THREE.LineDashedMaterial( { color: 0xffffff, dashSize: 1, gapSize: 0.5 } );
+
+                    				//scene.add(space_wireframe);
+                    				for ( var i = 0; i < cubes.length; i++) {
+                    				    var cube = cubes[i]
+                    				    var geometry = new THREE.WireframeGeometry(new THREE.BoxGeometry(cube.dim[0],  cube.dim[1], cube.dim[2] ))
+                    					var mesh = new THREE.LineSegments( geometry );
+                    					mesh.position.set(cube.pos[0] + cube.dim[0]/2 , cube.pos[1] + cube.dim[1]/2, cube.pos[2] + cube.dim[2]/2);
+
+                    					//mesh.scale.set(cube.dim[0], cube.dim[1], cube.dim[2])
+                    					mesh.updateMatrix();
+                    					mesh.matrixAutoUpdate = false;
+                    					scene.add( mesh );
+                    				}
+                    				var light = new THREE.DirectionalLight( 0xffffff,1);
+                                    light.position.set( 500, 1000, 500 );
+                                    light.target = origin;
+                                    scene.add( light );
+                    				// renderer
+                    				renderer = new THREE.WebGLRenderer( { antialias: true,  alpha: true } );
+                    				renderer.setClearColor( 0xffffff, 0 );
+                    				renderer.setPixelRatio( window.devicePixelRatio );
+                    				renderer.setSize( window.innerWidth, window.innerHeight );
+                    				document.body.appendChild( renderer.domElement );
+                    				createTrackballControls();
+                    				//
+                    				window.addEventListener( 'resize', onWindowResize, false );
+                    				//
+                    				render();
+                    			}
+
+                    			function createTrackballControls() {
+                    			    controls = new TrackballControls( camera, renderer.domElement );
+                                    controls.rotateSpeed = 1.0;
+                                    controls.zoomSpeed = 1.2;
+                                    controls.panSpeed = 0.8;
+                                    controls.noZoom = false;
+                                    controls.noPan = false;
+                                    controls.staticMoving = true;
+                                    controls.dynamicDampingFactor = 0.3;
+                                    controls.keys = [ 65, 83, 68 ];
+                                    controls.addEventListener( 'change', render );
+                    				camera.position.set(-600, 2000, 3000);
+                    				controls.target.set(1200/2, 0, 0);
+                    				controls.update();
+                    			}
+                    			function onWindowResize() {
+                    				camera.aspect = window.innerWidth / window.innerHeight;
+                    				camera.updateProjectionMatrix();
+                    				renderer.setSize( window.innerWidth, window.innerHeight );
+                    				controls.handleResize();
+                    				render();
+                    			}
+                    			function animate() {
+                    				requestAnimationFrame( animate );
+                    				controls.update();
+                    			}
+                    			function render() {
+                    				renderer.render( scene, camera );
+                    			}
+                                function getBox(sizeX, sizeY, sizeZ ) {
+                                				var hX = sizeX * 0.5;
+                                				var hY = sizeY * 0.5;
+                                				var hZ = sizeZ * 0.5;
+                                				var geometry = new THREE.BufferGeometry();
+                                				var position = [];
+                                				position.push(
+                                					- hX, - hY, - hZ,
+                                					- hX, hY, - hZ,
+                                					- hX, hY, - hZ,
+                                					hX, hY, - hZ,
+                                					hX, hY, - hZ,
+                                					hX, - hY, - hZ,
+                                					hX, - hY, - hZ,
+                                					- hX, - hY, - hZ,
+                                					- hX, - hY, hZ,
+                                					- hX, hY, hZ,
+                                					- hX, hY, hZ,
+                                					hX, hY, hZ,
+                                					hX, hY, hZ,
+                                					hX, - hY, hZ,
+                                					hX, - hY, hZ,
+                                					- hX, - hY, hZ,
+                                					- hX, - hY, - hZ,
+                                					- hX, - hY, hZ,
+                                					- hX, hY, - hZ,
+                                					- hX, hY, hZ,
+                                					hX, hY, - hZ,
+                                					hX, hY, hZ,
+                                					hX, - hY, - hZ,
+                                					hX, - hY, hZ
+                                				 );
+                                				geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( position, 3 ) );
+                                				return geometry;
+                                			}
+
+        		</script>
+    </body>
+</html>
