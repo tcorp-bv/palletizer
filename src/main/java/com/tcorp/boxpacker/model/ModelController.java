@@ -12,12 +12,15 @@ import java.util.stream.Collectors;
 public class ModelController {
     private static Random r = new Random();
 
-    public static List<Chromosome> step(List<Box> boxes, List<Container> containers, List<Chromosome> population, FitnessCalculator fitnessCalculator, int bestFitCutoff, double mutationProbability, double crossOverProb) {
+    public static List<Chromosome> step(List<Box> boxes, List<Container> containers, List<Chromosome> population, FitnessCalculator fitnessCalculator, int bestFitCutoff, double mutationProbability,
+                                        double mutationPercentage, double mutateGeneProbability, double mutateGenePercentage, double crossOverProb, double crossoverPercentage) {
 
         List<Chromosome> bestFit = calculateBestFit(boxes, containers, population, bestFitCutoff, fitnessCalculator);
+        System.out.println("Current best fit: " + fitnessCalculator.getFitness(boxes, containers, bestFit.get(0)));
         List<Chromosome> populationFromBestFit = getClonedPopulationFromBestFit(bestFit, population.size());
-        populationFromBestFit = mutate(populationFromBestFit, mutationProbability);
-        populationFromBestFit = crossover(populationFromBestFit, mutationProbability);
+        populationFromBestFit = mutate(populationFromBestFit, mutationProbability, mutationPercentage);
+        populationFromBestFit = mutateGenes(populationFromBestFit, mutateGeneProbability, mutateGenePercentage);
+        populationFromBestFit = crossover(populationFromBestFit, mutationProbability, crossoverPercentage);
         return populationFromBestFit;
     }
 
@@ -54,26 +57,39 @@ public class ModelController {
 
     }
 
-    public static List<Chromosome> mutate(List<Chromosome> population, double mutationProbability) {
+    public static List<Chromosome> mutate(List<Chromosome> population, double mutationProbability, double mutationPercentage) {
+
         List<Chromosome> newPopulation = new ArrayList<>(population.size());
         for (Chromosome chromosome : population) {
             if (r.nextDouble() < mutationProbability)
-                newPopulation.add(chromosome.mutate());
+                newPopulation.add(chromosome.mutate(mutationPercentage));
             else
                 newPopulation.add(chromosome);
+
         }
         return newPopulation;
     }
+    public static List<Chromosome> mutateGenes(List<Chromosome> population, double geneProbability, double genePercentage) {
 
-    public static List<Chromosome> crossover(List<Chromosome> population, double crossoverProbability) {
+        List<Chromosome> newPopulation = new ArrayList<>(population.size());
+        for (Chromosome chromosome : population) {
+            if (r.nextDouble() < geneProbability)
+                newPopulation.add(chromosome.mutateGene(genePercentage));
+            else
+                newPopulation.add(chromosome);
+
+        }
+        return newPopulation;
+    }
+    public static List<Chromosome> crossover(List<Chromosome> population, double crossoverProbability, double crossoverPercentage) {
         List<Chromosome> mating_pool = new ArrayList<>(population);
         List<Chromosome> nextPopulation = new ArrayList<>(mating_pool.size());
         while (mating_pool.size() > 0) {
             List<Integer> indices = RandomUtils.getPermutationSample(mating_pool.size(), 2);
             indices.sort(Comparator.comparingInt(value -> value));
             if (r.nextDouble() < crossoverProbability) {
-                Chromosome child1 = mating_pool.get(indices.get(0)).crossoverWith(mating_pool.get(indices.get(1)));
-                Chromosome child2 = mating_pool.get(indices.get(1)).crossoverWith(mating_pool.get(indices.get(0)));
+                Chromosome child1 = mating_pool.get(indices.get(0)).crossoverWith(mating_pool.get(indices.get(1)), crossoverPercentage);
+                Chromosome child2 = mating_pool.get(indices.get(1)).crossoverWith(mating_pool.get(indices.get(0)), crossoverPercentage);
                 nextPopulation.add(child1);
                 nextPopulation.add(child2);
             } else {

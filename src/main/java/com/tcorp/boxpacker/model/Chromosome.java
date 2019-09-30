@@ -5,6 +5,8 @@ import com.tcorp.boxpacker.util.RandomUtils;
 
 import java.util.*;
 
+import static java.lang.Long.max;
+
 public class Chromosome {
     Random r = new Random();
     //original_index=>new_index
@@ -12,21 +14,24 @@ public class Chromosome {
     //original_index=>new_index
     private Integer[] containerSequence;
     private HashMap<Object, Long> genes;
+    private List<Object> genesList;
 
     public Integer[] getBoxSequence() {
         return boxSequence;
     }
 
-    public Chromosome(Integer[] boxSequence, Integer[] containerSequence, HashMap<Object, Long> genes) {
+    public Chromosome(Integer[] boxSequence, Integer[] containerSequence, HashMap<Object, Long> genes, List<Object> genesList) {
         this.boxSequence = boxSequence;
         this.containerSequence = containerSequence;
         this.genes = genes;
+        this.genesList = genesList;
     }
 
     public Long getOrGenerateGene(Object key) {
         Long gene = genes.get(key);
-        if(gene == null){
+        if (gene == null) {
             genes.put(key, r.nextLong());
+            genesList.add(key);
             gene = genes.get(key);
         }
         return gene;
@@ -50,7 +55,8 @@ public class Chromosome {
         return new Chromosome(
                 RandomUtils.getRandomPermutation(nBoxes),
                 RandomUtils.getRandomPermutation(nContainers),
-                new HashMap<>()
+                new HashMap<>(),
+                new ArrayList<>()
         );
     }
 
@@ -62,30 +68,52 @@ public class Chromosome {
     }
 
 
-    public Chromosome mutate() {
+    public Chromosome mutate(double mutationPercentage) {
         //todo: regenerate two genes
-        genes.size();
-        return new Chromosome(swapRandom(boxSequence), swapRandom(containerSequence), genes);
+        Chromosome c = this;
+        for (int i = 0; i < max(1l, Math.round(getBoxSequence().length * mutationPercentage)); i++)
+            c = new Chromosome(swapRandom(c.getBoxSequence()), swapRandom(c.getContainerSequence()), genes, genesList);
+        c.setGenesAndList((HashMap<Object, Long>) genes.clone(), new ArrayList<>(genesList));
+        return c;
     }
-    public Chromosome mutateGene(double percentage) {
-        //todo: regenerate two genes
-        genes.size();
-        return new Chromosome(swapRandom(boxSequence), swapRandom(containerSequence), genes);
-    }
-    public Chromosome crossoverWith(Chromosome parent){
-        return new Chromosome(
-                crossOverRandom(getBoxSequence(), parent.getBoxSequence()),
-                crossOverRandom(getContainerSequence(), parent.getContainerSequence()),
-                genes
-        );
 
-
+    public Chromosome mutateGene(double genePercentage) {
+        genes.size();
+        if (genes.size() == 0)
+            return this;
+        HashMap<Object, Long> genesClone = (HashMap<Object, Long>) genes.clone();
+        Chromosome c = this;
+        for (int i = 0; i < max(1l, Math.round(genes.size() * genePercentage)); i++)
+            genesClone.put(genesList.get(i), r.nextLong());
+        return new Chromosome(getBoxSequence(), getContainerSequence(), genesClone, new ArrayList<>(genesList));
     }
-    private static Integer[] crossOverRandom(Integer[] sequence1, Integer[] sequence2){
-        if(sequence1.length == 1)
+
+    public Chromosome crossoverWith(Chromosome parent, double crossoverPercentage) {
+
+        Chromosome c = this;
+        for (int i = 0; i < max(1l, Math.round(getBoxSequence().length * crossoverPercentage)); i++)
+            c = new Chromosome(crossOverRandom(getBoxSequence(), parent.getBoxSequence()),
+                    getContainerSequence(),
+                    genes, genesList);
+        for (int i = 0; i < max(1l, Math.round(getContainerSequence().length * crossoverPercentage)); i++)
+            c = new Chromosome(getBoxSequence(),
+                    crossOverRandom(getContainerSequence(), parent.getContainerSequence()),
+                    genes, genesList);
+        c.setGenesAndList((HashMap<Object, Long>) genes.clone(), new ArrayList<>(genesList));
+        return c;
+    }
+
+    public Chromosome setGenesAndList(HashMap<Object, Long> genes, List<Object> genesList) {
+        this.genes = genes;
+        this.genesList = genesList;
+        return this;
+    }
+
+    private static Integer[] crossOverRandom(Integer[] sequence1, Integer[] sequence2) {
+        if (sequence1.length == 1)
             return sequence1;
         int numItems = sequence1.length;
-        List<Integer> cutIndices =  RandomUtils.getPermutationSample(numItems, 2);
+        List<Integer> cutIndices = RandomUtils.getPermutationSample(numItems, 2);
         cutIndices.sort(Integer::compareTo);
         Integer[] firstSegment = new Integer[cutIndices.get(0)];
         Integer[] middleSegment = Arrays.copyOfRange(sequence1, cutIndices.get(0) + 1, cutIndices.get(1) + 1);
@@ -93,24 +121,26 @@ public class Chromosome {
 
         List<Integer> missing = getMissing(middleSegment, numItems);
         Integer[] randomizedIndex = RandomUtils.getRandomPermutation(missing.size());
-        for(int i = 0; i < firstSegment.length; i++)
+        for (int i = 0; i < firstSegment.length; i++)
             firstSegment[i] = missing.get(randomizedIndex[i]);
 
-        if(lastSegment.length != 0)
-        for(int i = 0; i < lastSegment.length; i++)
-            lastSegment[i] = missing.get(randomizedIndex[i + firstSegment.length]);
+        if (lastSegment.length != 0)
+            for (int i = 0; i < lastSegment.length; i++)
+                lastSegment[i] = missing.get(randomizedIndex[i + firstSegment.length]);
         return ArrayUtils.concatenate(firstSegment, middleSegment, lastSegment);
     }
-    private static List<Integer> getMissing(Integer[] segment, int length){
+
+    private static List<Integer> getMissing(Integer[] segment, int length) {
         Set<Integer> segmentSet = new HashSet<>(Arrays.asList(segment));
         List<Integer> missing = new ArrayList<>(length);
-        for(int i = 0; i < length; i++)
-            if(!segmentSet.contains(i))
+        for (int i = 0; i < length; i++)
+            if (!segmentSet.contains(i))
                 missing.add(i);
         return missing;
     }
+
     private static Integer[] swapRandom(Integer[] sequence) {
-        if(sequence.length == 1)
+        if (sequence.length == 1)
             return sequence;
         Integer[] newSequence = Arrays.copyOf(sequence, sequence.length);
         int length = newSequence.length;

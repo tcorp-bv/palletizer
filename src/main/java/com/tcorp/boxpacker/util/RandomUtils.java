@@ -49,4 +49,10 @@ public class RandomUtils {
         }
        return result;
     }
+    public double getValue(double average){
+        BetaDistribution betaDistribution;
+
+        double next = r.nextGaussian() + average;
+        return next > 1 ?
+    }
 }

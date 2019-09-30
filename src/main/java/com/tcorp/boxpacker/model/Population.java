@@ -11,7 +11,11 @@ public class Population {
     private List<Chromosome> chromosomes;
     private int bestFitCutoff;
     private double mutationProbability;
+    private double mutationPercentage;
     private double crossoverProbability;
+    private  double crossoverPercentage;
+    private double mutateGeneProbability;
+    private double mutateGenePercentage;
     private FitnessCalculator fitnessCalculator;
     private List<Box> boxes;
     private List<Container> containers;
@@ -23,21 +27,33 @@ public class Population {
                 config.getFitnessCalculator(),
                 config.getBestFitCutoff(),
                 config.getMutationProbability(),
-                config.getCrossoverProbability());
+                config.getMutationPercentage(),
+                config.getMutateGeneProbability(),
+                config.getMutateGenesPercentage(),
+                config.getCrossoverProbability(),
+                config.getCrossoverPercentage());
     }
 
     public Population(List<Chromosome> chromosomes, List<Box> boxes, List<Container> containers,
                       FitnessCalculator fitnessCalculator,
                       int bestFitCutoff,
                       double mutationProbability,
-                      double crossoverProbability) {
+                      double mutationPercentage,
+                      double mutateGeneProbability,
+                      double mutateGenePercentage,
+                      double crossoverProbability,
+                      double crossoverPercentage) {
         this.chromosomes = chromosomes;
         this.boxes = boxes;
         this.containers = containers;
         this.fitnessCalculator = fitnessCalculator;
         this.bestFitCutoff = bestFitCutoff;
         this.mutationProbability = mutationProbability;
+        this.mutationPercentage = mutationPercentage;
+        this.mutationProbability = mutateGeneProbability;
+        this.mutateGenePercentage = mutateGenePercentage;
         this.crossoverProbability = crossoverProbability;
+        this.crossoverPercentage = crossoverPercentage;
     }
 
     public void evolve(int cycles){
@@ -50,7 +66,8 @@ public class Population {
      * Go to the next iteration
      */
     public void evolve(){
-        chromosomes = ModelController.step(boxes, containers, chromosomes, fitnessCalculator, bestFitCutoff, mutationProbability, crossoverProbability);
+        chromosomes = ModelController.step(boxes, containers, chromosomes, fitnessCalculator, bestFitCutoff, mutationProbability,
+                mutationPercentage, mutateGeneProbability, mutateGenePercentage, crossoverProbability, crossoverPercentage);
     }
 
     /**

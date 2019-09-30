@@ -1,8 +1,6 @@
 package com.tcorp.boxpacker;
 
 import com.google.gson.JsonArray;
-import com.tcorp.boxpacker.util.RandomUtils;
-import sun.invoke.empty.Empty;
 
 import java.util.*;
 
@@ -206,7 +204,7 @@ public class PackingSolution {
                 continue;
             Vector3D newOrigin = containerEms.getOrigin().copy();
             Vector3D newDimensions = containerEms.getDimensions().copy();
-            if(box.getOrigin().get(dim) == 0){ //right side
+            if(box.getOrigin().get(dim) != 0){ //right side
                 newOrigin.set(dim, newOrigin.get(dim));
                 newDimensions.set(dim, newDimensions.get(dim) - box.getDimensions().get(dim));
             }else { //left side
@@ -214,8 +212,9 @@ public class PackingSolution {
                 newDimensions.set(dim, newDimensions.get(dim) - box.getDimensions().get(dim));
             }
 
-            for (int maxDim : maxDims)
+            for (int maxDim : maxDims) {
                 newDimensions.set(maxDim, box.getDimensions().get(maxDim));
+            }
             max.add(new EmptyMaximalSpace(newOrigin, newDimensions));
             maxDims.add(dim);
             return getSurroundingEMSes(containerEms, maxDims, max, box);

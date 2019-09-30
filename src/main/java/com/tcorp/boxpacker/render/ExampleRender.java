@@ -20,19 +20,29 @@ public class ExampleRender {
 
 
         List<Container> containers = new ArrayList<>();
-        for(int i = 0; i <11;i++)
+        for(int i = 0; i <1;i++)
         containers.add(new Container(new Vector3D(0, 0, 0), new Vector3D(1200, 1800 - 144, 800)));
 
         List<Box> boxes = new ArrayList<>();
-        for (int i = 0; i < 500; i++) {
-            Box box = new Box(new Vector3D(), new Vector3D(1200 * Math.random(), 800 * Math.random(), 800 * Math.random()), 0);
+//        for (int i = 0; i < 100; i++) {
+//            Box box = new Box(new Vector3D(), new Vector3D(100 +500 * Math.random(), 200 + 300 * Math.random(), 200 + 300 * Math.random()), 0);
+//            boxes.add(box);
+//        }
+        for (int i = 0; i < 100; i++) {
+            Box box = new Box(new Vector3D(), new Vector3D(540, 420, 240), 0);
             boxes.add(box);
         }
-
         BoxPacker boxPacker = new BoxPacker();
-        PackingSolution solution = boxPacker.pack(boxes, containers, new PackerConfig().setIterations(20).setPopulationSize(1000).setBestFitCutoff(200).setMutationProbability(0.5).setCrossoverProbability(0.5));
-        System.out.println(DefaultFitnessCalculator.getFitness(solution));
-        System.out.println(DefaultFitnessCalculator.getStabilityModifierAggregate(solution));
+        PackingSolution solution = boxPacker.pack(boxes, containers, new PackerConfig().setIterations(100).setPopulationSize(2000).setBestFitCutoff(400).setMutationProbability(0.5).setMutationPercentage(0.05)
+                .setCrossoverProbability(0.5).setMutateGeneProbability(0.5).setMutateGenesPercentage(0.05));
+//        PackingSolution solution2 = boxPacker.pack(boxes, containers, new PackerConfig().setIterations(100).setPopulationSize(3000).setBestFitCutoff(100).setMutationProbability(0.5).setMutationPercentage(0.05)
+//                .setCrossoverProbability(0.5).setMutateGeneProbability(0.5).setMutateGenesPercentage(0.3));
+        System.out.println("solution 1: ");
+        System.out.println("- fitness: " + DefaultFitnessCalculator.getFitness(solution));
+        System.out.println("- stability" + DefaultFitnessCalculator.getStabilityModifierAggregate(solution));
+//        System.out.println("solution 2: ");
+//        System.out.println("- fitness: " + DefaultFitnessCalculator.getFitness(solution2));
+//        System.out.println("- stability" + DefaultFitnessCalculator.getStabilityModifierAggregate(solution2));
 //        JsonArray res = new JsonArray();
 //        for (EmptyMaximalSpace ems : solution.getEMS(container)) {
 //            res.add(ems.getJsonObject());

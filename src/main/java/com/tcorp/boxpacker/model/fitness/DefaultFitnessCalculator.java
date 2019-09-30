@@ -1,6 +1,5 @@
 package com.tcorp.boxpacker.model.fitness;
 
-import com.sun.xml.internal.bind.v2.runtime.reflect.Lister;
 import com.tcorp.boxpacker.Box;
 import com.tcorp.boxpacker.Container;
 import com.tcorp.boxpacker.PackingSolution;
@@ -14,6 +13,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import static java.lang.Double.max;
+
 public class DefaultFitnessCalculator {
 
     public static double getFitness(List<Box> boxes, List<Container> containers, Chromosome chromosome) {
@@ -21,8 +22,10 @@ public class DefaultFitnessCalculator {
     }
     //lower fitness is better
     public static double getFitness(PackingSolution packingSolution) {
-        double fitness = 1 - (packingSolution.getTotalBoxesVolume() / packingSolution.getTotalContainerVolume());
-        fitness =   fitness*getStabilityModifierAggregate(packingSolution);
+        double maxThis = packingSolution.getTotalBoxesVolume() / packingSolution.getTotalContainerVolume();
+        double fitness = 1 - maxThis;
+        fitness *=1;
+        fitness *= (getStabilityModifierAggregate(packingSolution) + 1);
         return fitness;
     }
 
@@ -57,15 +60,18 @@ public class DefaultFitnessCalculator {
         }
         return packingSolution;
     }
-
+    //1 is bad, 0 is good
     public static double getStabilityModifierAggregate(PackingSolution packingSolution) {
-        double modifier = 1;
+        double modifier = 0;
         for (Container container : packingSolution.getContainers()) {
-            modifier *= getStabilityModifier(packingSolution.getSolution(container));
+            double containerStabModifier =  getStabilityModifier(packingSolution.getSolution(container));;
+            modifier += containerStabModifier;
+            if(containerStabModifier > 0.5)
+                modifier+= packingSolution.getContainers().size() * 1000;
         }
-        return 1 + modifier/packingSolution.getContainers().size();
+        return modifier / packingSolution.getContainers().size();
     }
-    //value between 0 and 1 => 1 is good, 0 is bad
+    //value between 0 and 1 => 1 is bad, 0 is good
     private static double getStabilityModifier(List<Box> boxes) {
         HashMap<BigDecimal, List<Box>> roofsAtLevel = new HashMap<>(boxes.size());
         for (Box box : boxes) {
@@ -74,15 +80,15 @@ public class DefaultFitnessCalculator {
                 roofsAtLevel.put(roofLevel, new ArrayList<>());
             roofsAtLevel.get(roofLevel).add(box);
         }
-        double modifier = 1;
+        double modifier = 0;
         for (Box box : boxes) {
             BigDecimal y = new BigDecimal(box.getOrigin().getY()).round(MathContext.DECIMAL32);
             if (!roofsAtLevel.containsKey(y)) {
                 if (box.getOrigin().getY() != 0) {
-                    modifier *=0;
+                    modifier += boxes.size() * 1000;
                     //System.out.println("Box is floating?");
                 }else
-                    modifier *= 1;
+                    modifier += 0;
             } else {
                 double surface = 0;
                 for (Box roofBox : roofsAtLevel.get(y)) {
@@ -90,11 +96,12 @@ public class DefaultFitnessCalculator {
                     surface += intersect.getWidth() * intersect.getHeight();
                 }
                 double surfaceCovered = Math.max(0, surface / box.getDimensions().getSurfaceArea());
-                modifier *= surfaceCovered;
+                modifier += 1- surfaceCovered;
+                if(surfaceCovered < 0.8)
+                    modifier += boxes.size() * 1000;
             }
         }
-        return modifier;
-
+        return  modifier / boxes.size();
     }
 
 }
